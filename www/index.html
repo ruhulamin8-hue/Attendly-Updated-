@@ -82,6 +82,8 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .stu:first-child{border-top:0}
 .roll{width:62px;flex:none;font:600 12px var(--font-head);color:var(--muted);font-variant-numeric:tabular-nums}
 .nm{flex:1;min-width:0;font-weight:500;overflow-wrap:anywhere}
+.who{flex:1;min-width:0}
+.who .roll{display:block;width:auto;margin-top:1px;overflow-wrap:anywhere}
 .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none}
 .seg button{width:42px;height:36px;border:0;background:var(--surface2);font-weight:700;cursor:pointer;color:var(--muted)}
 .seg button.on-p{background:var(--good);color:#fff}
@@ -137,6 +139,24 @@ a{color:var(--accent)}
 .pvbar .btn.sm{height:36px;min-width:36px}
 #pvScroll{flex:1;min-height:0;overflow:auto;padding:12px;background:var(--surface2);touch-action:pan-x pan-y pinch-zoom}
 #pvScroll canvas.sheet{display:block;margin:0 auto 14px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25),0 6px 18px rgba(0,0,0,.12);max-width:none}
+#lock{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px max(24px,env(safe-area-inset-left,0px));overflow:auto}
+#lock[hidden]{display:none}
+#lock .lk-logo{width:56px;height:56px;border-radius:16px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+#lock h1{font-size:22px;font-weight:700;margin-top:4px}
+#lock p{margin:0;color:var(--muted);text-align:center;min-height:20px;font-size:13px}
+#lock p.err{color:var(--bad);font-weight:600}
+.dots{display:flex;gap:14px;margin:6px 0 4px}
+.dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);transition:background .1s}
+.dots i.on{background:var(--accent);border-color:var(--accent)}
+.pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px}
+.pad button{width:72px;height:72px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font:600 24px var(--font-head);color:var(--ink);cursor:pointer;display:grid;place-items:center;padding:0}
+.pad button:active{background:var(--accent-soft)}
+.pad button.ghost{border-color:transparent;background:none}
+.pad button svg{width:26px;height:26px}
+#lkForgot{border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:8px}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.dots.shake{animation:shake .35s}
+@media (prefers-reduced-motion: reduce){.dots.shake{animation:none}}
 @media (prefers-reduced-motion: reduce){main{scroll-behavior:auto}#toast{transition:none}}
 </style>
 </head>
@@ -157,6 +177,22 @@ a{color:var(--accent)}
     <button data-tab="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h7.5L19 8v12.5H7z"/><path d="M14.5 3.5V8H19M9.5 13h7M9.5 16.5h7"/></svg>Report</button>
     <button data-tab="developer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4M13.5 5l-3 14"/></svg>Developer</button>
   </nav>
+</div>
+<div id="lock" role="dialog" aria-modal="true" aria-label="Unlock Attendly" hidden>
+  <div class="lk-logo" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+  <h1 id="lkTitle">Enter PIN</h1>
+  <p id="lkMsg"></p>
+  <div class="dots" id="lkDots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="pad" id="lkPad">
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <button class="ghost" id="lkBio" data-k="bio" aria-label="Use fingerprint or phone lock" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v3.5c0 2-.5 4-1.5 5.5M8.5 9.5A4 4 0 0 1 16 11v2c0 2.2-.3 4.3-1 6M5.5 8A7.5 7.5 0 0 1 19 11v1.5M5 12v-1M6.5 17c.6-1.7 1-3.5 1-5.5"/></svg></button>
+    <span id="lkGap"></span>
+    <button data-k="0">0</button>
+    <button class="ghost" data-k="del" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M13 9.5l5 5M18 9.5l-5 5"/></svg></button>
+  </div>
+  <button id="lkForgot" hidden>Forgot PIN?</button>
 </div>
 <div id="pv" hidden role="dialog" aria-label="Report preview">
   <div class="pvbar">
@@ -276,7 +312,7 @@ function renderAttendance(){
     return;
   }
   if (!currentSubject()) ui.subjectId = S.subjects[0].id;
-  v.innerHTML = `<h1 class="page-title">Attendance</h1><p class="page-sub">Everyone starts as present. Tap A for absentees, then save.</p>
+  v.innerHTML = `<h1 class="page-title" style="margin-bottom:12px">Attendance</h1>
     <div class="card">
       <div class="row">
         <label class="f">Date<input type="date" id="attDate" value="${ui.date}" max="${ymd(new Date())}"></label>
@@ -320,7 +356,7 @@ function paintList(){
   if (!all.length){ el.innerHTML = `<div class="empty">No students in Semester ${sub ? sub.sem : ''} yet.<br><button class="btn primary" data-go>Import students</button></div>`; el.querySelector('[data-go]').onclick = () => go('import'); return; }
   if (!list.length){ el.innerHTML = '<div class="empty">No student matches your search.</div>'; return; }
   const marks = ui.draft.marks;
-  el.innerHTML = list.map(s => `<div class="stu"><span class="roll">${esc(s.roll)}</span><span class="nm">${esc(s.name)}</span>
+  el.innerHTML = list.map(s => `<div class="stu"><div class="who"><span class="nm">${esc(s.name)}</span><span class="roll">${esc(s.roll)}</span></div>
     <div class="seg" role="group" aria-label="Mark ${esc(s.name)}"><button data-id="${s.id}" data-m="P" class="${marks[s.id]==='P'?'on-p':''}" aria-pressed="${marks[s.id]==='P'}" aria-label="Present">P</button><button data-id="${s.id}" data-m="A" class="${marks[s.id]==='A'?'on-a':''}" aria-pressed="${marks[s.id]==='A'}" aria-label="Absent">A</button></div></div>`).join('');
 }
 function saveAttendance(){
@@ -763,6 +799,72 @@ function renderDeveloper(){
   const cm = $('#copyMail');
   if (cm) cm.onclick = () => { (navigator.clipboard ? navigator.clipboard.writeText(DEV.email) : Promise.reject()).then(() => toast('Email copied'), () => toast('Press and hold the email to copy it')); };
 }
+
+/* ---- App lock: PIN, plus fingerprint / phone lock when the app runs on a phone ---- */
+const PIN_KEY = 'attendly.pin';
+const lk = {mode: 'enter', buf: '', first: '', hiddenAt: 0, busy: false};
+const bioPlugin = () => { const c = window.Capacitor; return c && c.isNativePlatform && c.isNativePlatform() && c.Plugins && c.Plugins.BiometricAuth || null; };
+const getPin = () => { try { return JSON.parse(localStorage.getItem(PIN_KEY)); } catch(e){ return null; } };
+async function hashPin(pin, salt){
+  const s = salt + ':' + pin;
+  if (window.crypto && crypto.subtle){ const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return Array.from(new Uint8Array(d)).map(b => b.toString(16).padStart(2, '0')).join(''); }
+  let x = 5381; for (let i = 0; i < s.length; i++) x = ((x * 33) ^ s.charCodeAt(i)) >>> 0; return 'f' + x;
+}
+function lkPaint(msg, err){
+  const T = {enter: ['Enter PIN', 'Unlock Attendly'], set1: ['Create a PIN', 'Choose a 4-digit PIN to protect the app'], set2: ['Confirm PIN', 'Enter the same PIN again']}[lk.mode];
+  $('#lkTitle').textContent = T[0];
+  const m = $('#lkMsg'); m.textContent = msg || T[1]; m.classList.toggle('err', !!err);
+  document.querySelectorAll('#lkDots i').forEach((d, i) => d.classList.toggle('on', i < lk.buf.length));
+  $('#lkBio').hidden = !(lk.mode === 'enter' && bioPlugin());
+  $('#lkGap').hidden = !$('#lkBio').hidden;
+  $('#lkForgot').hidden = !(lk.mode === 'enter' && bioPlugin());
+}
+function showLock(){
+  lk.mode = getPin() ? 'enter' : 'set1'; lk.buf = ''; lk.first = '';
+  $('#lock').hidden = false; lkPaint();
+  if (lk.mode === 'enter') nativeUnlock(false);
+}
+function unlock(){ lk.buf = ''; $('#lock').hidden = true; }
+function lkFail(msg){ const d = $('#lkDots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); lk.buf = ''; lkPaint(msg, true); }
+async function lkKey(k){
+  if (lk.busy) return;
+  if (k === 'bio') return nativeUnlock(true);
+  if (k === 'del'){ lk.buf = lk.buf.slice(0, -1); return lkPaint(); }
+  if (lk.buf.length >= 4) return;
+  lk.buf += k; lkPaint();
+  if (lk.buf.length < 4) return;
+  lk.busy = true;
+  try {
+    const pin = lk.buf, saved = getPin();
+    if (lk.mode === 'enter'){
+      if (saved && await hashPin(pin, saved.salt) === saved.hash) unlock(); else lkFail('Wrong PIN, try again');
+    } else if (lk.mode === 'set1'){ lk.first = pin; lk.buf = ''; lk.mode = 'set2'; lkPaint(); }
+    else {
+      if (pin !== lk.first){ lk.mode = 'set1'; lk.first = ''; lkFail('PINs did not match, start again'); }
+      else {
+        const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+        try { localStorage.setItem(PIN_KEY, JSON.stringify({salt, hash: await hashPin(pin, salt)})); } catch(e){}
+        unlock(); toast('PIN saved');
+      }
+    }
+  } finally { lk.busy = false; }
+}
+async function nativeUnlock(manual, thenReset){
+  const B = bioPlugin(); if (!B) return false;
+  try {
+    await B.authenticate({reason: 'Unlock Attendly', cancelTitle: 'Use PIN', allowDeviceCredential: true, androidTitle: 'Unlock Attendly', androidSubtitle: 'Use fingerprint, face or your phone PIN'});
+    if (thenReset){ lk.mode = 'set1'; lk.buf = ''; lk.first = ''; lkPaint(); } else unlock();
+    return true;
+  } catch(e){ if (manual) lkPaint('Not unlocked. Use your PIN instead.', true); return false; }
+}
+$('#lkPad').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) lkKey(b.dataset.k); });
+$('#lkForgot').onclick = () => nativeUnlock(true, true);
+window.addEventListener('keydown', e => { if ($('#lock').hidden) return; if (/^\d$/.test(e.key)) lkKey(e.key); else if (e.key === 'Backspace') lkKey('del'); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden){ lk.hiddenAt = Date.now(); return; }
+  if (lk.hiddenAt && Date.now() - lk.hiddenAt > 60000 && getPin() && $('#lock').hidden) showLock();
+});
+showLock();
 
 if (!location.hash) history.replaceState(null, '', '#attendance');
 render();
