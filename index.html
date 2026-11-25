@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Attendly</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: one phone-shaped column. Header, scrolling view, bottom tab bar with four windows. */
+:root{
+  --bg:#eef2f1; --surface:#ffffff; --surface2:#f4f7f6; --line:#dbe3e1;
+  --ink:#10201e; --muted:#5b6f6b;
+  --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:#d9efeb;
+  --good:#15803d; --good-soft:#dcf3e3;
+  --warn:#a15c07; --warn-soft:#fbecd0;
+  --bad:#b4232a; --bad-soft:#fbe0e1;
+  --font-body:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-head:'Space Grotesk','Inter',system-ui,sans-serif;
+  color-scheme:light;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1514; --surface:#142120; --surface2:#1a2b29; --line:#264240;
+    --ink:#e6f1ef; --muted:#93aca8;
+    --accent:#2dd4bf; --accent-ink:#04201c; --accent-soft:#143b37;
+    --good:#4ade80; --good-soft:#143523;
+    --warn:#f5b84a; --warn-soft:#3b2d0f;
+    --bad:#ff8a8f; --bad-soft:#401a1c;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1514; --surface:#142120; --surface2:#1a2b29; --line:#264240;
+  --ink:#e6f1ef; --muted:#93aca8;
+  --accent:#2dd4bf; --accent-ink:#04201c; --accent-soft:#143b37;
+  --good:#4ade80; --good-soft:#143523;
+  --warn:#f5b84a; --warn-soft:#3b2d0f;
+  --bad:#ff8a8f; --bad-soft:#401a1c;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--font-body);-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--font-head);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg)}
+.top{padding-block:14px 8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.brand b{font:700 18px var(--font-head)}
+.top small{color:var(--muted);font-size:12px;white-space:nowrap}
+main{flex:1;min-height:0;overflow-y:auto;padding-block:6px 18px;scroll-behavior:smooth}
+.page-title{font-size:24px;font-weight:700;margin:6px 0 2px}
+.page-sub{color:var(--muted);margin:0 0 14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.card h2{font-size:15px;font-weight:600;margin-bottom:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 140px;min-width:0}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:500;color:var(--muted)}
+input[type=text],input[type=date],select,input[type=search]{
+  width:100%;height:42px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);padding:0 11px;color:var(--ink);font-size:14px}
+input[type=file]{width:100%;font-size:13px;color:var(--muted)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{height:42px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);padding:0 14px;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{height:34px;padding:0 11px;font-size:13px}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.chip{flex:1 1 70px;border-radius:10px;padding:8px 10px;background:var(--surface);border:1px solid var(--line)}
+.chip span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.chip b{font:700 20px var(--font-head);font-variant-numeric:tabular-nums}
+.chip.p b{color:var(--good)} .chip.a b{color:var(--bad)}
+.tools{display:flex;gap:8px;margin-bottom:10px}
+.tools .btn{flex:1}
+.stu{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.stu:first-child{border-top:0}
+.roll{width:62px;flex:none;font:600 12px var(--font-head);color:var(--muted);font-variant-numeric:tabular-nums}
+.nm{flex:1;min-width:0;font-weight:500;overflow-wrap:anywhere}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none}
+.seg button{width:42px;height:36px;border:0;background:var(--surface2);font-weight:700;cursor:pointer;color:var(--muted)}
+.seg button.on-p{background:var(--good);color:#fff}
+.seg button.on-a{background:var(--bad);color:#fff}
+.savebar{position:sticky;bottom:0;padding-top:8px;background:linear-gradient(to top,var(--bg) 70%,transparent)}
+.savebar .btn{width:100%}
+.badge{display:inline-block;font-size:11px;font-weight:600;border-radius:99px;padding:2px 9px}
+.badge.ok{background:var(--good-soft);color:var(--good)}
+.badge.dirty{background:var(--warn-soft);color:var(--warn)}
+.badge.bad{background:var(--bad-soft);color:var(--bad)}
+.empty{color:var(--muted);text-align:center;padding:22px 8px}
+.empty .btn{margin-top:10px}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+.item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item div{min-width:0;overflow-wrap:anywhere}
+.item small{color:var(--muted);display:block}
+.banner{background:var(--accent-soft);color:var(--ink);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.banner span{font-size:13px;flex:1}
+.ringwrap{display:flex;align-items:center;gap:16px}
+.ring{width:124px;height:124px;flex:none}
+.ring text{fill:var(--ink);font-family:var(--font-head)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-width:0}
+.tile{background:var(--surface2);border-radius:10px;padding:9px 11px}
+.tile span{display:block;font-size:11px;color:var(--muted)}
+.tile b{font:700 20px var(--font-head);font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;position:relative}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--good)}
+.bar i.warn{background:var(--warn)} .bar i.bad{background:var(--bad)}
+.bar::after{content:"";position:absolute;left:75%;top:0;bottom:0;width:2px;background:var(--ink);opacity:.35}
+.prow{padding:10px 0;border-top:1px solid var(--line)}
+.prow:first-child{border-top:0}
+.prow .h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.prow .h b{font-weight:600;overflow-wrap:anywhere}
+.prow .h em{font-style:normal;font:600 13px var(--font-head);font-variant-numeric:tabular-nums;white-space:nowrap}
+.prow small{color:var(--muted)}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);border-top:1px solid var(--line)}
+.tabs button{border:0;background:none;padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer}
+.tabs button svg{width:22px;height:22px}
+.tabs button[aria-current=page]{color:var(--accent)}
+.avatar{width:72px;height:72px;border-radius:20px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:700 26px var(--font-head)}
+.dev{display:flex;gap:14px;align-items:center}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.kv:first-of-type{border-top:0}
+.kv span{color:var(--muted)} .kv b{font-weight:500;text-align:right;overflow-wrap:anywhere;min-width:0}
+a{color:var(--accent)}
+#toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:99px;font-weight:500;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%;text-align:center;z-index:60}
+#toast.show{opacity:1}
+#pv{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column}
+.pvbar{display:flex;align-items:center;gap:6px;background:var(--surface);border-bottom:1px solid var(--line);padding:10px max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.pvbar .t{flex:1;min-width:0;font:600 15px var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pvbar .z{min-width:44px;text-align:center;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pvbar .btn.sm{height:36px;min-width:36px}
+#pvScroll{flex:1;min-height:0;overflow:auto;padding:12px;background:var(--surface2);touch-action:pan-x pan-y pinch-zoom}
+#pvScroll canvas.sheet{display:block;margin:0 auto 14px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25),0 6px 18px rgba(0,0,0,.12);max-width:none}
+@media (prefers-reduced-motion: reduce){main{scroll-behavior:auto}#toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top gut">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
+      <b>Attendly</b>
+    </div>
+    <small id="topDate"></small>
+  </header>
+  <main id="view" class="gut"></main>
+  <nav class="tabs gut" id="tabs" aria-label="Main">
+    <button data-tab="attendance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12.5l3 3 5-6"/></svg>Attendance</button>
+    <button data-tab="import"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg>Import</button>
+    <button data-tab="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Dashboard</button>
+    <button data-tab="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h7.5L19 8v12.5H7z"/><path d="M14.5 3.5V8H19M9.5 13h7M9.5 16.5h7"/></svg>Report</button>
+    <button data-tab="developer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4M13.5 5l-3 14"/></svg>Developer</button>
+  </nav>
+</div>
+<div id="pv" hidden role="dialog" aria-label="Report preview">
+  <div class="pvbar">
+    <button class="btn sm" id="pvClose" aria-label="Close preview">&times;</button>
+    <span class="t" id="pvTitle">Preview</span>
+    <button class="btn sm" id="pvOut" aria-label="Zoom out">&minus;</button><span class="z" id="pvZoom">100%</span><button class="btn sm" id="pvIn" aria-label="Zoom in">+</button>
+    <button class="btn sm primary" id="pvSave">Download</button>
+  </div>
+  <div id="pvScroll"></div>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+/* ---- Developer details ---- */
+const DEV = {
+  name: 'Ruhul Amin Laskar',
+  role: 'Lecturer',
+  dept: 'Biomedical Engineering Department',
+  email: '',   /* optional: shown under Contact when filled */
+  github: ''   /* optional: your GitHub username */
+};
+
+const SEMS = [1,2,3,4,5,6,7,8];
+const KEY = 'attendly.v1';
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+const prettyDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short', year:'numeric'}); };
+
+/* ---- Data ---- */
+function seed(){
+  const subs = [
+    {id:'s1', name:'Data Structures', sem:3},
+    {id:'s2', name:'Database Systems', sem:3},
+    {id:'s3', name:'Operating Systems', sem:3}
+  ];
+  const names = ['Aarav Sharma','Diya Patel','Rohan Gupta','Ananya Iyer','Vikram Singh','Meera Nair','Kabir Khan','Isha Reddy','Arjun Verma','Priya Das','Sanjay Mishra','Neha Kulkarni'];
+  const cats = ['GEN','OBC','GEN','SC','GEN','OBC','GEN','EWS','GEN','SC','OBC','GEN'];
+  const studs = names.map((n,i) => ({id:'t'+i, roll:'CS3' + pad(i+1), name:n, sem:3, cat:cats[i]}));
+  const misses = [0.04,0.08,0.15,0.03,0.38,0.1,0.22,0.05,0.3,0.12,0.45,0.06];
+  let r = 7;
+  const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+  const recs = {};
+  const day = new Date();
+  let made = 0;
+  while (made < 9){
+    day.setDate(day.getDate() - 1);
+    if (day.getDay() === 0) continue;
+    made++;
+    subs.forEach(sb => {
+      if (rnd() < 0.2) return;
+      const m = {};
+      studs.forEach((st,i) => { m[st.id] = rnd() < misses[i] ? 'A' : 'P'; });
+      recs[ymd(day) + '|' + sb.id] = m;
+    });
+  }
+  return {subjects:subs, students:studs, records:recs, sample:true};
+}
+function load(){
+  try { const r = localStorage.getItem(KEY); if (r) { const o = JSON.parse(r); if (o && o.subjects) return o; } } catch(e){}
+  return seed();
+}
+function persist(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+let S = load();
+const ui = {date: ymd(new Date()), subjectId: '', search: '', draft: null, dirty: false, dashSem: '', dashSub: '', importRows: null, stuSem: '', repSem: '', repSub: '', repFill: 'saved'};
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function confirmTap(btn, label, run){
+  if (btn.dataset.armed){ clearTimeout(btn._t); btn.dataset.armed=''; run(); return; }
+  btn.dataset.armed = '1'; btn._orig = btn.textContent; btn.textContent = 'Tap to confirm';
+  btn._t = setTimeout(() => { btn.dataset.armed=''; btn.textContent = btn._orig; }, 2500);
+}
+function semOptions(sel, withAll){
+  return (withAll ? '<option value="">All semesters</option>' : '') + SEMS.map(n => `<option value="${n}"${String(sel)===String(n)?' selected':''}>Semester ${n}</option>`).join('');
+}
+const pctClass = p => p >= 75 ? '' : p >= 60 ? 'warn' : 'bad';
+const pctBadge = p => p >= 75 ? '<span class="badge ok">On track</span>' : p >= 60 ? '<span class="badge dirty">Low</span>' : '<span class="badge bad">Critical</span>';
+
+/* ---- Navigation ---- */
+const TABS = ['attendance','import','dashboard','report','developer'];
+let tab = 'attendance';
+function go(t){ if (location.hash !== '#' + t) location.hash = t; else render(); }
+function render(){
+  const h = location.hash.replace('#','');
+  tab = TABS.includes(h) ? h : 'attendance';
+  document.querySelectorAll('#tabs button').forEach(b => b.dataset.tab === tab ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
+  $('#topDate').textContent = new Date().toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'short'});
+  ({attendance: renderAttendance, import: renderImport, dashboard: renderDashboard, report: renderReport, developer: renderDeveloper})[tab]();
+  $('#view').scrollTop = 0;
+}
+window.addEventListener('hashchange', render);
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) go(b.dataset.tab); });
+
+/* ---- Window 1: Attendance ---- */
+function currentSubject(){ return S.subjects.find(x => x.id === ui.subjectId); }
+function studentsFor(sub){ return sub ? S.students.filter(s => s.sem === sub.sem).sort((a,b) => a.roll.localeCompare(b.roll, undefined, {numeric:true})) : []; }
+function loadDraft(){
+  const sub = currentSubject();
+  if (!sub){ ui.draft = null; return; }
+  const saved = S.records[ui.date + '|' + sub.id];
+  const m = {};
+  studentsFor(sub).forEach(s => { m[s.id] = saved && saved[s.id] ? saved[s.id] : 'P'; });
+  ui.draft = {marks: m, saved: !!saved};
+  ui.dirty = false;
+}
+function renderAttendance(){
+  const v = $('#view');
+  if (!S.subjects.length){
+    v.innerHTML = `<h1 class="page-title">Attendance</h1><p class="page-sub">Mark who is present today.</p>
+      <div class="card empty">Add a subject and import your students first.<br><button class="btn primary" data-go="import">Open Import</button></div>`;
+    v.querySelector('[data-go]').onclick = () => go('import');
+    return;
+  }
+  if (!currentSubject()) ui.subjectId = S.subjects[0].id;
+  v.innerHTML = `<h1 class="page-title">Attendance</h1><p class="page-sub">Everyone starts as present. Tap A for absentees, then save.</p>
+    <div class="card">
+      <div class="row">
+        <label class="f">Date<input type="date" id="attDate" value="${ui.date}" max="${ymd(new Date())}"></label>
+        <label class="f">Subject<select id="attSubject">${S.subjects.map(x => `<option value="${x.id}"${x.id===ui.subjectId?' selected':''}>${esc(x.name)} (Sem ${x.sem})</option>`).join('')}</select></label>
+      </div>
+      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px"><span id="attStatus"></span><span class="hint" style="margin:0" id="attDay"></span></div>
+    </div>
+    <div class="chips" id="attChips"></div>
+    <div class="tools"><button class="btn sm" data-act="allp">Mark all present</button><button class="btn sm" data-act="alla">Mark all absent</button></div>
+    <input type="search" id="attSearch" placeholder="Search name or roll no." value="${esc(ui.search)}" style="margin-bottom:10px">
+    <div class="card" id="attList" style="padding-block:6px"></div>
+    <div class="savebar"><button class="btn primary" id="attSave">Save attendance</button></div>`;
+  $('#attDate').onchange = e => { ui.date = e.target.value || ymd(new Date()); loadDraft(); paintAttendance(); };
+  $('#attSubject').onchange = e => { ui.subjectId = e.target.value; loadDraft(); paintAttendance(); };
+  $('#attSearch').oninput = e => { ui.search = e.target.value; paintList(); };
+  v.querySelector('[data-act=allp]').onclick = () => bulk('P');
+  v.querySelector('[data-act=alla]').onclick = () => bulk('A');
+  $('#attSave').onclick = saveAttendance;
+  $('#attList').onclick = e => {
+    const b = e.target.closest('button[data-m]'); if (!b) return;
+    ui.draft.marks[b.dataset.id] = b.dataset.m; ui.dirty = true; paintAttendance();
+  };
+  loadDraft(); paintAttendance();
+}
+function bulk(m){ if (!ui.draft) return; Object.keys(ui.draft.marks).forEach(k => ui.draft.marks[k] = m); ui.dirty = true; paintAttendance(); }
+function paintAttendance(){
+  const sub = currentSubject(), list = studentsFor(sub);
+  const marks = ui.draft ? ui.draft.marks : {};
+  const p = list.filter(s => marks[s.id] === 'P').length, a = list.length - p;
+  $('#attChips').innerHTML = `<div class="chip"><span>Students</span><b>${list.length}</b></div><div class="chip p"><span>Present</span><b>${p}</b></div><div class="chip a"><span>Absent</span><b>${a}</b></div>`;
+  $('#attStatus').innerHTML = ui.dirty ? '<span class="badge dirty">Unsaved changes</span>' : (ui.draft && ui.draft.saved ? '<span class="badge ok">Saved</span>' : '<span class="badge dirty">Not saved yet</span>');
+  $('#attDay').textContent = prettyDate(ui.date);
+  $('#attSave').disabled = !list.length;
+  paintList();
+}
+function paintList(){
+  const sub = currentSubject(), q = ui.search.trim().toLowerCase();
+  const all = studentsFor(sub);
+  const list = all.filter(s => !q || s.name.toLowerCase().includes(q) || s.roll.toLowerCase().includes(q));
+  const el = $('#attList');
+  if (!all.length){ el.innerHTML = `<div class="empty">No students in Semester ${sub ? sub.sem : ''} yet.<br><button class="btn primary" data-go>Import students</button></div>`; el.querySelector('[data-go]').onclick = () => go('import'); return; }
+  if (!list.length){ el.innerHTML = '<div class="empty">No student matches your search.</div>'; return; }
+  const marks = ui.draft.marks;
+  el.innerHTML = list.map(s => `<div class="stu"><span class="roll">${esc(s.roll)}</span><span class="nm">${esc(s.name)}</span>
+    <div class="seg" role="group" aria-label="Mark ${esc(s.name)}"><button data-id="${s.id}" data-m="P" class="${marks[s.id]==='P'?'on-p':''}" aria-pressed="${marks[s.id]==='P'}" aria-label="Present">P</button><button data-id="${s.id}" data-m="A" class="${marks[s.id]==='A'?'on-a':''}" aria-pressed="${marks[s.id]==='A'}" aria-label="Absent">A</button></div></div>`).join('');
+}
+function saveAttendance(){
+  const sub = currentSubject(); if (!sub || !ui.draft) return;
+  S.records[ui.date + '|' + sub.id] = {...ui.draft.marks};
+  persist(); ui.draft.saved = true; ui.dirty = false; paintAttendance();
+  const a = Object.values(ui.draft.marks).filter(x => x === 'A').length;
+  toast(`Saved. ${Object.keys(ui.draft.marks).length - a} present, ${a} absent`);
+}
+
+/* ---- Window 2: Import ---- */
+let xlsxPromise;
+function loadXLSX(){
+  if (window.XLSX) return Promise.resolve();
+  if (xlsxPromise) return xlsxPromise;
+  xlsxPromise = new Promise((res, rej) => {
+    const tryLoad = (src, next) => {
+      const s = document.createElement('script'); s.src = src; s.onload = res;
+      s.onerror = () => next ? tryLoad(next) : rej(new Error('Excel reader could not load'));
+      document.head.appendChild(s);
+    };
+    tryLoad('vendor/xlsx.full.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  });
+  xlsxPromise.catch(() => { xlsxPromise = null; });
+  return xlsxPromise;
+}
+function parseSheet(rows){
+  rows = rows.filter(r => r && r.some(c => String(c).trim() !== ''));
+  if (!rows.length) return [];
+  let rc = 0, nc = 1, cc = -1, start = 0, single = rows[0].length < 2;
+  const hi = rows.slice(0, 5).findIndex(r => r.some(c => /name/i.test(c)));
+  if (hi >= 0){
+    const h = rows[hi];
+    nc = h.findIndex(c => /name/i.test(c));
+    let r2 = h.findIndex((c, i) => i !== nc && /roll|reg|enrol/i.test(c));
+    if (r2 < 0) r2 = h.findIndex((c, i) => i !== nc && /\bid\b|admission/i.test(c));
+    rc = r2 >= 0 ? r2 : (nc === 0 ? 1 : 0);
+    cc = h.findIndex((c, i) => i !== nc && i !== rc && /categ|^\s*cat\.?\s*$/i.test(c));
+    start = hi + 1; single = false;
+  } else if (single){ nc = 0; }
+  const out = [];
+  rows.slice(start).forEach((r, i) => {
+    const name = String(r[nc] ?? '').trim();
+    if (!name) return;
+    const roll = single ? String(i + 1) : String(r[rc] ?? '').trim() || String(i + 1);
+    out.push({roll, name, cat: cc >= 0 ? String(r[cc] ?? '').trim() : ''});
+  });
+  return out;
+}
+function renderImport(){
+  const v = $('#view');
+  v.innerHTML = `<h1 class="page-title">Import</h1><p class="page-sub">Bring in students and set up subjects for each semester.</p>
+    <div id="sampleBanner"></div>
+    <div class="card"><h2>Import students from Excel</h2>
+      <label class="f">Semester for these students<select id="impSem">${semOptions(ui.stuSem || 3)}</select></label>
+      <label class="f" style="margin-top:10px">Excel or CSV file<input type="file" id="impFile" accept=".xlsx,.xls,.csv"></label>
+      <p class="hint">Use headers Roll No and Name. A Category column (GEN, OBC, SC...) is optional and appears on the report. A row with a roll number already in the semester updates that student.</p>
+      <div id="impPreview"></div>
+    </div>
+    <div class="card"><h2>Add subject</h2>
+      <div class="row"><label class="f">Subject name<input type="text" id="subName" placeholder="e.g. Computer Networks" autocomplete="off"></label>
+      <label class="f">Semester<select id="subSem">${semOptions(ui.stuSem || 3)}</select></label></div>
+      <button class="btn primary" id="subAdd" style="margin-top:10px;width:100%">Add subject</button>
+      <div id="subList" style="margin-top:6px"></div>
+    </div>
+    <div class="card"><h2>Add one student</h2>
+      <div class="row"><label class="f">Roll no.<input type="text" id="oneRoll" autocomplete="off"></label><label class="f">Name<input type="text" id="oneName" autocomplete="off"></label>
+      <label class="f">Category<input type="text" id="oneCat" list="catList" placeholder="GEN" autocomplete="off"></label>
+      <label class="f">Semester<select id="oneSem">${semOptions(ui.stuSem || 3)}</select></label></div>
+      <datalist id="catList"><option value="GEN"><option value="OBC"><option value="SC"><option value="ST(P)"><option value="ST(H)"><option value="EWS"></datalist>
+      <button class="btn" id="oneAdd" style="margin-top:10px;width:100%">Add student</button>
+    </div>
+    <div class="card"><h2>Students</h2>
+      <label class="f">Show semester<select id="stuSem">${semOptions(ui.stuSem || 3)}</select></label>
+      <div id="stuList" style="margin-top:6px"></div>
+    </div>`;
+  ui.stuSem = ui.stuSem || '3';
+  $('#impFile').onchange = onFile;
+  $('#subAdd').onclick = addSubject;
+  $('#oneAdd').onclick = addOne;
+  $('#stuSem').onchange = e => { ui.stuSem = e.target.value; paintStudents(); };
+  $('#subList').onclick = e => { const b = e.target.closest('[data-del]'); if (b) confirmTap(b, 'Delete', () => { const id = b.dataset.del; S.subjects = S.subjects.filter(x => x.id !== id); Object.keys(S.records).forEach(k => { if (k.endsWith('|' + id)) delete S.records[k]; }); persist(); paintSubjects(); toast('Subject deleted'); }); };
+  $('#stuList').onclick = e => {
+    const b = e.target.closest('[data-del],[data-clear]'); if (!b) return;
+    if (b.dataset.clear) return confirmTap(b, '', () => { const sem = +b.dataset.clear; const ids = new Set(S.students.filter(s => s.sem === sem).map(s => s.id)); S.students = S.students.filter(s => s.sem !== sem); Object.values(S.records).forEach(m => ids.forEach(id => delete m[id])); persist(); paintStudents(); toast(`Semester ${sem} students removed`); });
+    confirmTap(b, '', () => { const id = b.dataset.del; S.students = S.students.filter(s => s.id !== id); Object.values(S.records).forEach(m => delete m[id]); persist(); paintStudents(); toast('Student removed'); });
+  };
+  paintSample(); paintSubjects(); paintStudents();
+}
+function paintSample(){
+  const el = $('#sampleBanner'); if (!el) return;
+  el.innerHTML = S.sample ? '<div class="banner"><span>Example data is loaded so you can try the app. Clear it before real use.</span><button class="btn sm danger" id="clearSample">Clear</button></div>' : '';
+  if (S.sample) $('#clearSample').onclick = function(){ confirmTap(this, '', () => { S = {subjects:[], students:[], records:{}, sample:false}; persist(); ui.subjectId = ''; ui.draft = null; renderImport(); toast('Example data cleared'); }); };
+}
+async function onFile(e){
+  const f = e.target.files[0]; const box = $('#impPreview');
+  if (!f) return;
+  box.innerHTML = '<p class="hint">Reading file...</p>';
+  try {
+    await loadXLSX();
+    const wb = XLSX.read(await f.arrayBuffer(), {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+    const list = parseSheet(rows);
+    if (!list.length){ box.innerHTML = '<p class="hint" style="color:var(--bad)">No students found. Check that the sheet has a Name column.</p>'; return; }
+    ui.importRows = list;
+    box.innerHTML = `<div style="margin-top:10px"><span class="badge ok">${list.length} students found</span>
+      <p class="hint">First rows: ${list.slice(0,3).map(s => esc(s.roll + ' ' + s.name)).join(', ')}${list.length > 3 ? '...' : ''}</p>
+      <button class="btn primary" id="impGo" style="width:100%;margin-top:6px">Import ${list.length} students</button></div>`;
+    $('#impGo').onclick = doImport;
+  } catch(err){
+    box.innerHTML = '<p class="hint" style="color:var(--bad)">Could not read this file. Try .xlsx or .csv, and check your connection if the Excel reader was not bundled.</p>';
+  }
+}
+function doImport(){
+  const sem = +$('#impSem').value; let added = 0, updated = 0;
+  ui.importRows.forEach(r => {
+    const ex = S.students.find(s => s.sem === sem && s.roll.toLowerCase() === r.roll.toLowerCase());
+    if (ex){ ex.name = r.name; if (r.cat) ex.cat = r.cat; updated++; } else { S.students.push({id:'t' + uid(), roll:r.roll, name:r.name, sem, cat:r.cat || ''}); added++; }
+  });
+  persist(); ui.importRows = null; ui.stuSem = String(sem);
+  $('#impFile').value = ''; $('#impPreview').innerHTML = '';
+  $('#stuSem').value = String(sem); paintStudents();
+  toast(`${added} added, ${updated} updated in Semester ${sem}`);
+}
+function addSubject(){
+  const name = $('#subName').value.trim(), sem = +$('#subSem').value;
+  if (!name) return toast('Enter a subject name');
+  if (S.subjects.some(x => x.sem === sem && x.name.toLowerCase() === name.toLowerCase())) return toast('That subject already exists in this semester');
+  S.subjects.push({id:'s' + uid(), name, sem}); persist();
+  $('#subName').value = ''; paintSubjects(); toast('Subject added');
+}
+function addOne(){
+  const roll = $('#oneRoll').value.trim(), name = $('#oneName').value.trim(), sem = +$('#oneSem').value;
+  if (!roll || !name) return toast('Enter roll number and name');
+  if (S.students.some(s => s.sem === sem && s.roll.toLowerCase() === roll.toLowerCase())) return toast('That roll number is already in this semester');
+  S.students.push({id:'t' + uid(), roll, name, sem, cat:$('#oneCat').value.trim()}); persist();
+  $('#oneRoll').value = ''; $('#oneName').value = ''; $('#oneCat').value = ''; ui.stuSem = String(sem); $('#stuSem').value = String(sem); paintStudents(); toast('Student added');
+}
+function paintSubjects(){
+  const list = [...S.subjects].sort((a,b) => a.sem - b.sem || a.name.localeCompare(b.name));
+  $('#subList').innerHTML = list.length ? list.map(x => `<div class="item"><div>${esc(x.name)}<small>Semester ${x.sem}</small></div><button class="btn sm danger" data-del="${x.id}">Delete</button></div>`).join('') : '<p class="hint">No subjects yet.</p>';
+}
+function paintStudents(){
+  const sem = +ui.stuSem;
+  const list = S.students.filter(s => s.sem === sem).sort((a,b) => a.roll.localeCompare(b.roll, undefined, {numeric:true}));
+  $('#stuList').innerHTML = list.length
+    ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span class="badge ok">${list.length} students</span><button class="btn sm danger" data-clear="${sem}">Remove all</button></div>` +
+      list.map(s => `<div class="item"><div><b style="font-weight:500">${esc(s.name)}</b><small>${esc(s.roll)}${s.cat ? ' &middot; ' + esc(s.cat) : ''}</small></div><button class="btn sm danger" data-del="${s.id}">Remove</button></div>`).join('')
+    : `<p class="hint">No students in Semester ${sem}. Import an Excel file above.</p>`;
+}
+
+/* ---- Window 3: Dashboard ---- */
+function computeStats(sem, subId){
+  const students = S.students.filter(s => s.sem === sem);
+  const subs = S.subjects.filter(x => x.sem === sem && (!subId || x.id === subId));
+  const ids = new Set(subs.map(x => x.id));
+  const keys = Object.keys(S.records).filter(k => ids.has(k.split('|')[1]));
+  let P = 0, T = 0;
+  const rows = students.map(s => {
+    let p = 0, t = 0;
+    keys.forEach(k => { const m = S.records[k][s.id]; if (m){ t++; if (m === 'P') p++; } });
+    P += p; T += t;
+    return {s, p, t, pct: t ? p / t * 100 : null};
+  });
+  return {rows, held: keys.length, overall: T ? P / T * 100 : null, subs};
+}
+function renderDashboard(){
+  const v = $('#view');
+  const sems = [...new Set(S.subjects.map(x => x.sem).concat(S.students.map(x => x.sem)))].sort((a,b) => a - b);
+  if (!sems.length){ v.innerHTML = '<h1 class="page-title">Dashboard</h1><p class="page-sub">Attendance percentage by student and subject.</p><div class="card empty">Nothing to show yet. Import students and mark attendance first.</div>'; return; }
+  if (!sems.includes(+ui.dashSem)) ui.dashSem = String(sems[0]);
+  const sem = +ui.dashSem;
+  const subs = S.subjects.filter(x => x.sem === sem);
+  if (ui.dashSub && !subs.some(x => x.id === ui.dashSub)) ui.dashSub = '';
+  const st = computeStats(sem, ui.dashSub);
+  const ov = st.overall, low = st.rows.filter(r => r.pct !== null && r.pct < 75).length;
+  const C = 2 * Math.PI * 52;
+  const sorted = [...st.rows].sort((a,b) => (a.pct ?? 101) - (b.pct ?? 101));
+  const bySub = st.subs.map(x => ({x, st: computeStats(sem, x.id)}));
+  v.innerHTML = `<h1 class="page-title">Dashboard</h1><p class="page-sub">Attendance percentage. The line on each bar marks 75%.</p>
+    <div class="card"><div class="row">
+      <label class="f">Semester<select id="dSem">${sems.map(n => `<option value="${n}"${n===sem?' selected':''}>Semester ${n}</option>`).join('')}</select></label>
+      <label class="f">Subject<select id="dSub"><option value="">All subjects</option>${subs.map(x => `<option value="${x.id}"${x.id===ui.dashSub?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label></div></div>
+    <div class="card"><div class="ringwrap">
+      <svg class="ring" viewBox="0 0 124 124" role="img" aria-label="Overall attendance ${ov === null ? 'not available' : ov.toFixed(1) + ' percent'}">
+        <circle cx="62" cy="62" r="52" fill="none" stroke="var(--surface2)" stroke-width="11"/>
+        ${ov === null ? '' : `<circle cx="62" cy="62" r="52" fill="none" stroke="${ov>=75?'var(--good)':ov>=60?'var(--warn)':'var(--bad)'}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${(C*ov/100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 62 62)"/>`}
+        <text x="62" y="64" text-anchor="middle" font-size="26" font-weight="700">${ov === null ? '--' : Math.round(ov) + '%'}</text>
+        <text x="62" y="82" text-anchor="middle" font-size="10" style="fill:var(--muted)">overall</text></svg>
+      <div class="tiles"><div class="tile"><span>Classes held</span><b>${st.held}</b></div><div class="tile"><span>Students</span><b>${st.rows.length}</b></div>
+      <div class="tile"><span>Below 75%</span><b style="color:${low?'var(--bad)':'var(--good)'}">${low}</b></div><div class="tile"><span>Subjects</span><b>${st.subs.length}</b></div></div>
+    </div></div>
+    ${!ui.dashSub && bySub.length > 1 ? `<div class="card"><h2>By subject</h2>${bySub.map(({x, st:s}) => `<div class="prow"><div class="h"><b>${esc(x.name)}</b><em>${s.overall === null ? '--' : s.overall.toFixed(1) + '%'}</em></div><div class="bar"><i class="${s.overall===null?'':pctClass(s.overall)}" style="width:${s.overall ?? 0}%"></i></div><small>${s.held} classes held</small></div>`).join('')}</div>` : ''}
+    <div class="card"><h2>Students, lowest first</h2>${
+      !st.held ? '<div class="empty" style="padding:10px">No attendance saved for this selection yet.</div>' :
+      sorted.map(({s,p,t,pct}) => `<div class="prow"><div class="h"><b>${esc(s.name)} <small>${esc(s.roll)}</small></b><em>${pct === null ? '--' : pct.toFixed(1) + '%'}</em></div>
+        <div class="bar"><i class="${pct===null?'':pctClass(pct)}" style="width:${pct ?? 0}%"></i></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px"><small>${p} of ${t} classes attended</small>${pct === null ? '' : pctBadge(pct)}</div></div>`).join('')}</div>`;
+  $('#dSem').onchange = e => { ui.dashSem = e.target.value; ui.dashSub = ''; renderDashboard(); };
+  $('#dSub').onchange = e => { ui.dashSub = e.target.value; renderDashboard(); };
+}
+
+/* ---- Window 4: Report (attendance sheet as PDF, with preview) ---- */
+/* The same drawing list feeds both the on-screen preview and the PDF file, so they always match. */
+const PW = 841.89, PH = 595.28, PM = 28;           /* A4 landscape, points */
+const FSANS = 'Arial,Helvetica,"Liberation Sans",sans-serif', FSERIF = '"Times New Roman",Times,"Liberation Serif",serif';
+const FONTS = {
+  F1:{pdf:'Times-Roman', css:FSERIF, bold:false, w:[250,333,408,500,500,833,778,180,333,333,500,564,250,333,250,278,500,500,500,500,500,500,500,500,500,500,278,278,564,564,564,444,921,722,667,667,722,611,556,722,722,333,389,722,611,889,722,722,556,722,667,556,611,722,722,944,722,722,611,333,278,333,469,500,333,444,500,444,500,444,333,500,500,278,278,500,278,778,500,500,500,500,333,389,278,500,500,722,500,500,444,480,200,480,541]},
+  F2:{pdf:'Times-Bold', css:FSERIF, bold:true, w:[250,333,555,500,500,1000,833,278,333,333,500,570,250,333,250,278,500,500,500,500,500,500,500,500,500,500,333,333,570,570,570,500,930,722,667,722,722,667,611,778,778,389,500,778,667,944,722,778,611,778,722,556,667,722,722,1000,722,722,667,333,278,333,581,500,333,500,556,444,556,444,333,500,556,278,333,556,278,833,556,500,556,556,444,389,333,556,500,722,500,500,444,394,220,394,520]},
+  F3:{pdf:'Helvetica', css:FSANS, bold:false, w:[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584]},
+  F4:{pdf:'Helvetica-Bold', css:FSANS, bold:true, w:[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584]}
+};
+const clean = s => String(s).replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/[^\x20-\x7e\xa0-\xff]/g, '?');
+const tw = (f, s, sz) => { let t = 0; for (let i = 0; i < s.length; i++){ const c = s.charCodeAt(i); t += c >= 32 && c <= 126 ? FONTS[f].w[c - 32] : 556; } return t * sz / 1000; };
+const ordinal = n => n + ({1:'st', 2:'nd', 3:'rd'}[n] || 'th');
+const SESS_DEFAULT = {teacher: DEV.name, branch: 'Mechanical Engineering', session: 'Aug-Jan, 2026'};
+const NCOLS = 15;
+
+function reportData(sem, subId){
+  const students = S.students.filter(s => s.sem === sem).sort((a,b) => a.roll.localeCompare(b.roll, undefined, {numeric:true}));
+  const dates = Object.keys(S.records).filter(k => k.endsWith('|' + subId)).map(k => k.split('|')[0]).sort();
+  return {students, dates};
+}
+
+function buildReport(o){
+  const rd = reportData(o.sem, o.subId), students = rd.students, dates = o.filled ? rd.dates : [];
+  const xSl = PM, xName = xSl + 34, xRoll = xName + 146, xCat = xRoll + 100, xD0 = xCat + 44, xEnd = PW - PM;
+  const dw = (xEnd - xD0) / NCOLS;
+  const top = 100, hh = 18, bodyTop = top + hh * 2, rowH = 21;
+  const per = Math.floor((PH - PM - bodyTop) / rowH);
+  const dChunks = Math.max(1, Math.ceil(dates.length / NCOLS));
+  const sChunks = Math.max(1, Math.ceil(students.length / per));
+  const total = dChunks * sChunks, pages = [];
+  for (let dc = 0; dc < dChunks; dc++) for (let sc = 0; sc < sChunks; sc++){
+    const ops = [], rows = students.slice(sc * per, (sc + 1) * per);
+    const L = (x1, y1, x2, y2, w) => ops.push({k:'l', x1, y1, x2, y2, w});
+    const T = (f, sz, x, y, s, al) => { s = clean(s); const w = tw(f, s, sz); if (al === 'c') x -= w / 2; else if (al === 'r') x -= w; ops.push({k:'t', f, sz, x, y, s, w}); return w; };
+    const fitT = (f, sz, min, x, y, s, maxW) => { s = clean(s); while (sz > min && tw(f, s, sz) > maxW) sz -= .5; return T(f, sz, x, y, s); };
+
+    /* Title with superscript ordinal, underlined */
+    const a = 'ATTENDANCE SHEET(' + o.sem, b = ordinal(o.sem).replace(/^\d+/, ''), c = ' SEMESTER)';
+    const wa = tw('F2', a, 15), wb = tw('F2', b, 9.5), wc = tw('F2', c, 15);
+    let tx = PW / 2 - (wa + wb + wc) / 2;
+    T('F2', 15, tx, 44, a); T('F2', 9.5, tx + wa, 38.5, b); T('F2', 15, tx + wa + wb, 44, c);
+    L(tx, 46.5, tx + wa + wb + wc, 46.5, .8);
+
+    /* Header lines */
+    const lx = PM + 50, rx = PM + .613 * (PW - 2 * PM);
+    T('F2', 11, lx, 70, 'NAME OF TEACHER:'); fitT('F1', 11, 7, lx + 126, 70, o.teacher, rx - lx - 134);
+    T('F2', 11, lx, 86, 'BRANCH:'); fitT('F1', 11, 7, lx + 126, 86, o.branch.toUpperCase(), rx - lx - 134);
+    const w1 = T('F2', 11, rx, 70, 'SESSION:'); fitT('F1', 11, 7, rx + w1 + 4, 70, o.session, xEnd - rx - w1 - 6);
+    const w2 = T('F2', 11, rx, 86, 'NAME OF SUBJECT:'); fitT('F1', 11, 7, rx + w2 + 4, 86, o.subject, xEnd - rx - w2 - 6);
+
+    /* Grid */
+    const bottom = bodyTop + rows.length * rowH;
+    const vx = [xName, xRoll, xCat, xD0]; for (let i = 1; i < NCOLS; i++) vx.push(xD0 + i * dw);
+    L(xSl, top, xEnd, top, 1); L(xSl, bottom, xEnd, bottom, 1); L(xSl, top, xSl, bottom, 1); L(xEnd, top, xEnd, bottom, 1);
+    vx.forEach(x => L(x, top, x, bottom, .5));
+    L(xCat, top + hh, xEnd, top + hh, .5); L(xSl, bodyTop, xEnd, bodyTop, 1);
+    for (let r = 1; r < rows.length; r++) L(xSl, bodyTop + r * rowH, xEnd, bodyTop + r * rowH, .5);
+
+    /* Header text */
+    T('F2', 9, xSl + 17, top + 16, 'SL.', 'c'); T('F2', 9, xSl + 17, top + 28, 'NO', 'c');
+    T('F2', 11, (xName + xRoll) / 2, top + 22.5, 'NAME', 'c'); T('F2', 11, (xRoll + xCat) / 2, top + 22.5, 'Roll No', 'c');
+    T('F2', 7.5, xCat + 3, top + 12.5, 'DATE:'); T('F2', 7.5, xCat + 3, top + hh + 12.5, 'TIME:');
+    for (let i = 0; i < NCOLS; i++){
+      const d = dates[dc * NCOLS + i]; if (!d) continue;
+      const p = d.split('-'); T('F3', 6.5, xD0 + (i + .5) * dw, top + 12, p[2] + '/' + p[1], 'c');
+    }
+
+    /* Student rows */
+    rows.forEach((s, r) => {
+      const y = bodyTop + r * rowH, mid = y + rowH / 2;
+      T('F3', 9, xSl + 17, mid + 3.2, String(sc * per + r + 1), 'c');
+      const name = s.name.toUpperCase(), maxW = xRoll - xName - 8;
+      if (tw('F3', clean(name), 9) <= maxW) T('F3', 9, xName + 4, mid + 3.2, name);
+      else {
+        const words = name.split(/\s+/); let l1 = '', i = 0;
+        while (i < words.length - 1 && tw('F3', clean((l1 + ' ' + words[i]).trim()), 8) <= maxW) l1 = (l1 + ' ' + words[i++]).trim();
+        if (!l1){ l1 = words[0]; i = 1; }
+        let l2 = words.slice(i).join(' '), sz = 8;
+        while (sz > 5.5 && (tw('F3', clean(l1), sz) > maxW || tw('F3', clean(l2), sz) > maxW)) sz -= .5;
+        T('F3', sz, xName + 4, mid - 1.2, l1); T('F3', sz, xName + 4, mid + sz + .2, l2);
+      }
+      fitT('F3', 9, 6, xRoll + 4, mid + 3.2, s.roll.toUpperCase(), xCat - xRoll - 8);
+      if (s.cat) T('F3', 8, xCat + 3, mid + 3, s.cat.toUpperCase());
+      for (let i = 0; i < NCOLS; i++){
+        const d = dates[dc * NCOLS + i]; if (!d) continue;
+        const m = (S.records[d + '|' + o.subId] || {})[s.id];
+        if (m) T(m === 'A' ? 'F4' : 'F3', 9, xD0 + (i + .5) * dw, mid + 3.2, m, 'c');
+      }
+    });
+    if (!rows.length) T('F3', 10, PW / 2, bodyTop + 20, 'No students in this semester', 'c');
+    if (total > 1) T('F3', 7, PW / 2, PH - 12, `Page ${dc * sChunks + sc + 1} of ${total}`, 'c');
+    pages.push(ops);
+  }
+  return {pages, students: students.length, dates: dates.length};
+}
+
+/* Draw one page of the drawing list on a canvas (used by the preview). */
+function paintPage(cv, ops, cssW){
+  const k = Math.min(4, Math.max(1, cssW * (window.devicePixelRatio || 1) / PW));
+  cv.width = Math.round(PW * k); cv.height = Math.round(PH * k);
+  cv.style.width = cssW + 'px'; cv.style.height = (cssW * PH / PW) + 'px';
+  const g = cv.getContext('2d'); g.setTransform(k, 0, 0, k, 0, 0);
+  g.fillStyle = '#fff'; g.fillRect(0, 0, PW, PH); g.fillStyle = g.strokeStyle = '#000'; g.textBaseline = 'alphabetic'; g.lineCap = 'square';
+  ops.forEach(o => {
+    if (o.k === 'l'){ g.lineWidth = o.w; g.beginPath(); g.moveTo(o.x1, o.y1); g.lineTo(o.x2, o.y2); g.stroke(); }
+    else { const f = FONTS[o.f]; g.font = `${f.bold ? 'bold ' : ''}${o.sz}px ${f.css}`; g.fillText(o.s, o.x, o.y, o.w); }
+  });
+}
+
+/* Write the PDF file: real vector text and lines, standard fonts, no libraries. */
+function makePDF(pages){
+  const num = n => (Math.round(n * 100) / 100).toString();
+  const esc = s => { let r = ''; for (const ch of s){ const c = ch.charCodeAt(0); r += ch === '\\' || ch === '(' || ch === ')' ? '\\' + ch : c < 127 ? ch : '\\' + c.toString(8).padStart(3, '0'); } return r; };
+  const obj = [null];
+  const n = pages.length;
+  obj[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+  obj[2] = `<< /Type /Pages /Kids [${pages.map((_, i) => (7 + 2 * i) + ' 0 R').join(' ')}] /Count ${n} >>`;
+  ['F1','F2','F3','F4'].forEach((k, i) => obj[3 + i] = `<< /Type /Font /Subtype /Type1 /BaseFont /${FONTS[k].pdf} /Encoding /WinAnsiEncoding >>`);
+  pages.forEach((ops, i) => {
+    let s = '0 G 0 g 1 J\n';
+    ops.forEach(o => {
+      if (o.k === 'l') s += `${num(o.w)} w ${num(o.x1)} ${num(PH - o.y1)} m ${num(o.x2)} ${num(PH - o.y2)} l S\n`;
+      else s += `BT /${o.f} ${num(o.sz)} Tf ${num(o.x)} ${num(PH - o.y)} Td (${esc(o.s)}) Tj ET\n`;
+    });
+    obj[7 + 2 * i] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >> /Contents ${8 + 2 * i} 0 R >>`;
+    obj[8 + 2 * i] = `<< /Length ${s.length} >>\nstream\n${s}endstream`;
+  });
+  let out = '%PDF-1.4\n', offs = [];
+  for (let i = 1; i < obj.length; i++){ offs[i] = out.length; out += `${i} 0 obj\n${obj[i]}\nendobj\n`; }
+  const xr = out.length;
+  out += `xref\n0 ${obj.length}\n0000000000 65535 f \n` + offs.slice(1).map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('');
+  out += `trailer\n<< /Size ${obj.length} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
+  const u = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) u[i] = out.charCodeAt(i) & 255;
+  return u;
+}
+
+function reportOpts(){
+  const sub = S.subjects.find(x => x.id === ui.repSub), R = S.report;
+  return {sem: sub.sem, subId: sub.id, subject: sub.name, teacher: R.teacher, branch: R.branch, session: R.session, filled: ui.repFill !== 'blank'};
+}
+function reportFileName(o){ return ('Attendance_Sem' + o.sem + '_' + o.subject).replace(/[^A-Za-z0-9]+/g, '_').replace(/_+$/, '') + '.pdf'; }
+
+function renderReport(){
+  const v = $('#view');
+  if (!S.subjects.length){
+    v.innerHTML = `<h1 class="page-title">Report</h1><p class="page-sub">Create the attendance sheet as a PDF.</p>
+      <div class="card empty">Add a subject and import your students first.<br><button class="btn primary" data-go>Open Import</button></div>`;
+    v.querySelector('[data-go]').onclick = () => go('import'); return;
+  }
+  S.report = Object.assign({}, SESS_DEFAULT, S.report || {});
+  const sems = [...new Set(S.subjects.map(x => x.sem))].sort((a,b) => a - b);
+  if (!sems.includes(+ui.repSem)) ui.repSem = String(sems[0]);
+  const subs = S.subjects.filter(x => x.sem === +ui.repSem);
+  if (!subs.some(x => x.id === ui.repSub)) ui.repSub = subs[0].id;
+  const R = S.report;
+  v.innerHTML = `<h1 class="page-title">Report</h1><p class="page-sub">Attendance sheet in the college format. Preview it, then save the PDF.</p>
+    <div class="card"><h2>Sheet</h2>
+      <div class="row">
+        <label class="f">Semester<select id="rSem">${sems.map(n => `<option value="${n}"${n === +ui.repSem ? ' selected' : ''}>Semester ${n}</option>`).join('')}</select></label>
+        <label class="f">Subject<select id="rSub">${subs.map(x => `<option value="${x.id}"${x.id === ui.repSub ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
+      </div>
+      <label class="f" style="margin-top:10px">Date columns<select id="rFill"><option value="saved"${ui.repFill !== 'blank' ? ' selected' : ''}>Fill with saved attendance (P / A)</option><option value="blank"${ui.repFill === 'blank' ? ' selected' : ''}>Leave blank to fill by hand</option></select></label>
+      <div id="rInfo" style="margin-top:10px"></div>
+    </div>
+    <div class="card"><h2>Header details</h2>
+      <label class="f">Name of teacher<input type="text" id="rTeacher" value="${esc(R.teacher)}" autocomplete="off"></label>
+      <div class="row" style="margin-top:10px">
+        <label class="f">Branch<input type="text" id="rBranch" value="${esc(R.branch)}" autocomplete="off"></label>
+        <label class="f">Session<input type="text" id="rSession" value="${esc(R.session)}" autocomplete="off"></label>
+      </div>
+      <p class="hint">Saved on this device and reused for every report.</p>
+    </div>
+    <div class="savebar"><div class="row" style="flex-wrap:nowrap"><button class="btn" id="rPrev">Preview</button><button class="btn primary" id="rSave">Download PDF</button></div></div>`;
+  const info = () => {
+    const o = reportOpts(), b = buildReport(o), n = reportData(o.sem, o.subId).dates.length;
+    $('#rInfo').innerHTML = `<span class="badge ok">${b.students} students</span> <span class="badge ok">${n} class dates saved</span> <span class="badge ok">${b.pages.length} page${b.pages.length > 1 ? 's' : ''}</span>`;
+  };
+  $('#rSem').onchange = e => { ui.repSem = e.target.value; renderReport(); };
+  $('#rSub').onchange = e => { ui.repSub = e.target.value; info(); };
+  $('#rFill').onchange = e => { ui.repFill = e.target.value; info(); };
+  [['rTeacher','teacher'], ['rBranch','branch'], ['rSession','session']].forEach(([id, k]) => $('#' + id).oninput = e => { S.report[k] = e.target.value; persist(); });
+  $('#rPrev').onclick = openPreview;
+  $('#rSave').onclick = () => savePDF();
+  info();
+}
+
+/* Preview overlay: every page, with zoom */
+const pv = {pages: null, zoom: 1, name: ''};
+function openPreview(){
+  const o = reportOpts(); pv.pages = buildReport(o).pages; pv.name = reportFileName(o); pv.zoom = 1;
+  $('#pv').hidden = false; document.body.style.overflow = 'hidden';
+  $('#pvTitle').textContent = `Preview, ${pv.pages.length} page${pv.pages.length > 1 ? 's' : ''}`;
+  $('#pvScroll').scrollTo(0, 0); paintPreview();
+}
+function paintPreview(){
+  const sc = $('#pvScroll'), base = Math.min(900, sc.clientWidth - 24), w = Math.round(base * pv.zoom);
+  if (sc.children.length !== pv.pages.length){ sc.innerHTML = ''; pv.pages.forEach(() => { const c = document.createElement('canvas'); c.className = 'sheet'; sc.appendChild(c); }); }
+  pv.pages.forEach((ops, i) => paintPage(sc.children[i], ops, w));
+  $('#pvZoom').textContent = Math.round(pv.zoom * 100) + '%';
+}
+function closePreview(){ $('#pv').hidden = true; document.body.style.overflow = ''; $('#pvScroll').innerHTML = ''; }
+function setZoom(z){ pv.zoom = Math.max(.5, Math.min(4, z)); paintPreview(); }
+$('#pvClose').onclick = closePreview;
+$('#pvIn').onclick = () => setZoom(pv.zoom * 1.25);
+$('#pvOut').onclick = () => setZoom(pv.zoom / 1.25);
+$('#pvSave').onclick = () => savePDF(pv.pages, pv.name);
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#pv').hidden) closePreview(); });
+window.addEventListener('resize', () => { if (!$('#pv').hidden) paintPreview(); });
+
+async function savePDF(pages, name){
+  try {
+    if (!pages){ const o = reportOpts(); pages = buildReport(o).pages; name = reportFileName(o); }
+    const bytes = makePDF(pages), cap = window.Capacitor, P = cap && cap.Plugins;
+    if (cap && cap.isNativePlatform && cap.isNativePlatform() && P && P.Filesystem && P.Share){
+      let bin = ''; for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+      const r = await P.Filesystem.writeFile({path: name, data: btoa(bin), directory: 'CACHE'});
+      await P.Share.share({title: name, url: r.uri, dialogTitle: 'Save or share the attendance sheet'});
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bytes], {type: 'application/pdf'})); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast('PDF saved: ' + name);
+    }
+  } catch(err){ if (!/cancel|dismiss/i.test(String(err && err.message || err))) toast('Could not save the PDF'); }
+}
+
+/* ---- Window 5: Developer ---- */
+function renderDeveloper(){
+  const ini = DEV.name.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+  const hasContact = DEV.email || DEV.github;
+  $('#view').innerHTML = `<h1 class="page-title">Developer</h1><p class="page-sub">Developer details.</p>
+    <div class="card"><div class="dev"><div class="avatar" aria-hidden="true">${esc(ini)}</div><div style="min-width:0"><h2 style="font-size:19px;margin:0">${esc(DEV.name)}</h2><div style="color:var(--muted)">${esc(DEV.role)}</div><div style="color:var(--muted);font-size:13px">${esc(DEV.dept)}</div></div></div></div>
+    ${hasContact ? `<div class="card"><h2>Contact</h2>
+      ${DEV.email ? `<div class="kv"><span>Email</span><b>${esc(DEV.email)}</b></div>` : ''}
+      ${DEV.github ? `<div class="kv"><span>GitHub</span><b><a href="https://github.com/${encodeURIComponent(DEV.github)}" target="_blank" rel="noopener">github.com/${esc(DEV.github)}</a></b></div>` : ''}
+      ${DEV.email ? '<button class="btn sm" id="copyMail" style="margin-top:8px">Copy email</button>' : ''}</div>` : ''}`;
+  const cm = $('#copyMail');
+  if (cm) cm.onclick = () => { (navigator.clipboard ? navigator.clipboard.writeText(DEV.email) : Promise.reject()).then(() => toast('Email copied'), () => toast('Press and hold the email to copy it')); };
+}
+
+if (!location.hash) history.replaceState(null, '', '#attendance');
+render();
+</script>
+</body>
+</html>
