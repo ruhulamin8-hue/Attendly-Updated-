@@ -21,9 +21,9 @@ jobs:
           java-version: 17
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-audit --no-fund --legacy-peer-deps
 
-      - name: Bundle the Excel reader so import works offline
+      - name: Bundle the Excel reader
         run: npm run vendor
 
       - name: Create the Android project
@@ -36,7 +36,7 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
